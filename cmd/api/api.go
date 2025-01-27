@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blogsapi/internal/store"
 	"log"
 	"net/http"
 	"time"
@@ -11,15 +12,24 @@ import (
 
 type application struct {
 	config config
+	store  store.Storage
 }
 
 type config struct {
 	addr string
+	db   dbConfig
 }
 
-func (app *application) mount() http.Handler{
+type dbConfig struct {
+	addr         string
+	maxOpenConns int
+	maxIdleConns int
+	maxIdleTime  string
+}
+
+func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
-	
+
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -27,7 +37,7 @@ func (app *application) mount() http.Handler{
 
 	//Set a timeout value on the request context (ctx), that will signal through ctx.Done() that the request has timed out and further processing should be stopped
 	r.Use(middleware.Timeout(60 * time.Second))
-	
+
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
 	})
@@ -35,19 +45,17 @@ func (app *application) mount() http.Handler{
 }
 
 func (app *application) run(mux http.Handler) error {
-	
-	srv := &http.Server{
-		Addr: app.config.addr,
-		Handler: mux,
-		WriteTimeout: time.Second * 30,
-		ReadTimeout: time.Second * 10,
-		IdleTimeout: time.Minute,
-	}
 
+	srv := &http.Server{
+		Addr:         app.config.addr,
+		Handler:      mux,
+		WriteTimeout: time.Second * 30,
+		ReadTimeout:  time.Second * 10,
+		IdleTimeout:  time.Minute,
+	}
 
 	log.Printf("mux is setup correctly")
 	log.Printf("server has started at http://localhost%s", app.config.addr)
-	
 
 	return srv.ListenAndServe()
 }

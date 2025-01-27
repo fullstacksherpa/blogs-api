@@ -1,25 +1,60 @@
 package main
 
 import (
+	"blogsapi/internal/db"
+	"blogsapi/internal/store"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	// Retrieve and convert maxOpenConns
+	maxOpenConnsStr := os.Getenv("DB_MAX_OPEN_CONNS")
+	maxOpenConns, err := strconv.Atoi(maxOpenConnsStr)
+	if err != nil {
+		log.Fatalf("Invalid value for DB_MAX_OPEN_CONNS: %v", err)
+	}
 
+	// Retrieve and convert maxIdleConns
+	maxIdleConnsStr := os.Getenv("DB_MAX_IDLE_CONNS")
+	maxIdleConns, err := strconv.Atoi(maxIdleConnsStr)
+	if err != nil {
+		log.Fatalf("Invalid value for DB_MAX_IDLE_CONNS: %v", err)
+	}
 
-func main(){
-	 err := godotenv.Load()
-  if err != nil {
-    log.Fatal("Error loading .env file")
-  }
-cfg := config{
-	addr: os.Getenv("ADDR"),
-  }
+	cfg := config{
+		addr: os.Getenv("ADDR"),
+		db: dbConfig{
+			addr:         os.Getenv("DB_ADDR"),
+			maxOpenConns: maxOpenConns,
+			maxIdleConns: maxIdleConns,
+			maxIdleTime:  os.Getenv("DB_MAX_IDLE_TIME"),
+		},
+	}
 
-app := &application{
+	db, err := db.New(
+		cfg.db.addr,
+		cfg.db.maxOpenConns,
+		cfg.db.maxIdleConns,
+		cfg.db.maxIdleTime,
+	)
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	store := store.NewStorage(db)
+
+	app := &application{
 		config: cfg,
+		store:  store,
 	}
 
 	mux := app.mount()
