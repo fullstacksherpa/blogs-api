@@ -1,5 +1,1 @@
-Low-level data representation
-
-- At the hardware level, everything is stored and transmitted as bytes.
-
-In Go's net/http package,
+Relational databases like postgreSQL don't support many to many relationships directly. Instead, you model them by introducing an intermediary table (often called junction table, join table, associative table) that break the many to many relationship into two one to many relationship.
