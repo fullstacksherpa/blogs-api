@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
@@ -58,6 +59,9 @@ func main() {
 			maxIdleTime:  os.Getenv("DB_MAX_IDLE_TIME"),
 		},
 		env: os.Getenv("ENV"),
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3, //3 days
+		},
 	}
 	// Logger
 	logger := zap.Must(zap.NewProduction()).Sugar()
