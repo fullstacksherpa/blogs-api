@@ -105,21 +105,16 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 
 func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
-		// create the user
 		if err := s.Create(ctx, tx, user); err != nil {
-			return nil
+			return err
 		}
 
-		//create the user invite
 		if err := s.createUserInvitation(ctx, tx, token, invitationExp, user.ID); err != nil {
 			return err
 		}
+
 		return nil
 	})
-	//transaction wrapper
-	//crete the user
-	//create the user invite
-
 }
 
 func (s *UserStore) Activate(ctx context.Context, token string) error {
@@ -217,5 +212,34 @@ func (s *UserStore) createUserInvitation(ctx context.Context, tx *sql.Tx, token 
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (s *UserStore) Delete(ctx context.Context, userID int64) error {
+	return withTx(s.db, ctx, func(tx *sql.Tx) error {
+		if err := s.delete(ctx, tx, userID); err != nil {
+			return err
+		}
+
+		if err := s.deleteUserInvitations(ctx, tx, userID); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (s *UserStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
+	query := `DELETE FROM users WHERE id = $1`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	_, err := tx.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

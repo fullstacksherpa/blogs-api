@@ -10,6 +10,8 @@ require (
 	github.com/swaggo/http-swagger/v2 v2.0.2
 )
 
+require github.com/sendgrid/rest v2.6.9+incompatible // indirect
+
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
@@ -23,6 +25,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
+	github.com/sendgrid/sendgrid-go v3.16.0+incompatible
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	github.com/swaggo/swag v1.16.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
