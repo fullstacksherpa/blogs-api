@@ -17,6 +17,7 @@ type SendGridMailer struct {
 	client    *sendgrid.Client
 }
 
+// A constructor function that initialize and returns a SendGridMailer instance
 func NewSendgrid(apiKey, fromEmail string) *SendGridMailer {
 	client := sendgrid.NewSendClient(apiKey)
 	return &SendGridMailer{
@@ -48,7 +49,8 @@ func (m *SendGridMailer) Send(templateFile, username, email string, data any, is
 		return err
 	}
 
-	message := mail.NewSingleEmail(from, subject.String(), to, "", body.String())
+	message := mail.NewSingleEmail(from, subject.String(), to, "helo delete later", body.String())
+	fmt.Printf("this is subject: %s , this is from: %s,  this is to: %s, this is body: %s", subject.String(), from, to, body.String())
 
 	message.SetMailSettings(&mail.MailSettings{
 		SandboxMode: &mail.Setting{

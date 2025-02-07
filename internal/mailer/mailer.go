@@ -3,7 +3,7 @@ package mailer
 import "embed"
 
 const (
-	FromName            = "devSherBlogs"
+	FromName            = "GoCloudNepal"
 	maxRetires          = 3
 	UserWelcomeTemplate = "user_invitation.tmpl"
 )

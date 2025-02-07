@@ -91,8 +91,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		ActivationURL: activationURL,
 	}
 
-	// send email
-
 	err = app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, vars, !isProdEnv)
 	if err != nil {
 		app.logger.Errorw("error sending welcome email", "error", err)
@@ -104,6 +102,9 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		app.internalServerError(w, r, err)
 		return
 	}
+
+	//TODO: delete later, just for testing
+	fmt.Printf("the template is: %s , the Username is : %s, isProdEnv: %t", mailer.UserWelcomeTemplate, user.Username, !isProdEnv)
 
 	if err := app.jsonResponse(w, http.StatusCreated, userWithToken); err != nil {
 		app.internalServerError(w, r, err)
