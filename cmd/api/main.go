@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blogsapi/internal/auth"
 	"blogsapi/internal/db"
 	"blogsapi/internal/mailer"
 	"blogsapi/internal/store"
@@ -73,6 +74,11 @@ func main() {
 				user: os.Getenv("AUTH_BASIC_USER"),
 				pass: os.Getenv("AUTH_BASIC_PASS"),
 			},
+			token: tokenConfig{
+				secret: os.Getenv("AUTH_TOKEN_SECRET"),
+				exp:    time.Hour * 24 * 3, //3 days
+				iss:    "Khelmandu",
+			},
 		},
 	}
 	// Logger
@@ -96,11 +102,14 @@ func main() {
 	store := store.NewStorage(db)
 	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
+
 	app := &application{
-		config: cfg,
-		store:  store,
-		logger: logger,
-		mailer: mailer,
+		config:        cfg,
+		store:         store,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: jwtAuthenticator,
 	}
 
 	mux := app.mount()

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blogsapi/internal/auth"
 	"blogsapi/internal/mailer"
 	"blogsapi/internal/store" //this is required to generate swagger docs
 	"fmt"
@@ -16,10 +17,11 @@ import (
 )
 
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -34,6 +36,13 @@ type config struct {
 
 type authConfig struct {
 	basic basicConfig
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secret string
+	exp    time.Duration
+	iss    string
 }
 
 type basicConfig struct {
@@ -77,6 +86,7 @@ func (app *application) mount() http.Handler {
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
 		r.Route("/posts", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 			r.Post("/", app.createPostHandler)
 
 			r.Route("/{postID}", func(r chi.Router) {
@@ -90,7 +100,7 @@ func (app *application) mount() http.Handler {
 		r.Route("/users", func(r chi.Router) {
 			r.Put("/activate/{token}", app.activateUserHandler)
 			r.Route("/{userID}", func(r chi.Router) {
-				r.Use(app.userContextMiddleware)
+				r.Use(app.AuthTokenMiddleware)
 				r.Get("/", app.getUserHandler)
 
 				//PUT is used to replace or create a resource but its Idempotent, meaning that making the same request multiple times will produce the same result.
@@ -99,6 +109,7 @@ func (app *application) mount() http.Handler {
 				r.Put("/unfollow", app.unfollowUserHandler)
 			})
 			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
 				r.Get("/feed", app.getUserFeedHandler)
 			})
 		})
@@ -106,6 +117,7 @@ func (app *application) mount() http.Handler {
 		// Public routes
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 	})
 	return r
