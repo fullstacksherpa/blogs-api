@@ -4,6 +4,7 @@ import (
 	"blogsapi/docs" //this is required to generate swagger docs
 	"blogsapi/internal/auth"
 	"blogsapi/internal/mailer"
+	"blogsapi/internal/ratelimiter"
 	"blogsapi/internal/store" //this is required to generate swagger docs
 	"context"
 	"errors"
@@ -28,6 +29,7 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
+	rateLimiter   ratelimiter.Limiter
 }
 
 type config struct {
@@ -38,6 +40,7 @@ type config struct {
 	mail        mailConfig
 	frontendURL string
 	auth        authConfig
+	rateLimiter ratelimiter.Config
 }
 
 type authConfig struct {
@@ -96,10 +99,11 @@ func (app *application) mount() http.Handler {
 
 	//Set a timeout value on the request context (ctx), that will signal through ctx.Done() that the request has timed out and further processing should be stopped
 	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(app.RateLimiterMiddleware)
 
 	r.Route("/v1", func(r chi.Router) {
 		//Operations
-		r.With(app.BasicAuthMiddleware()).Get("/health", app.healthCheckHandler)
+		r.Get("/health", app.healthCheckHandler)
 		r.With(app.BasicAuthMiddleware()).Get("/debug/vars", expvar.Handler().ServeHTTP)
 		//dynamically configuring this since later we will have development env, staging env, and production env.
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)

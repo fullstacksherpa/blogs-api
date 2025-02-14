@@ -4,8 +4,10 @@ import (
 	"blogsapi/internal/auth"
 	"blogsapi/internal/db"
 	"blogsapi/internal/mailer"
+	"blogsapi/internal/ratelimiter"
 	"blogsapi/internal/store"
 	"expvar"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -46,6 +48,21 @@ func main() {
 		log.Fatalf("Invalid value for DB_MAX_OPEN_CONNS: %v", err)
 	}
 
+	//for rate limiter .env string convert to required type
+	ratelimiterRequestsCountStr := os.Getenv("RATELIMITER_REQUESTS_COUNT")
+	ratelimiterRequestsInt, err := strconv.Atoi(ratelimiterRequestsCountStr)
+	if err != nil {
+		fmt.Println("Invalid  ratelimiterRequestsCount value, defaulting to 40")
+		ratelimiterRequestsInt = 40
+	}
+
+	ratelimiterEnableStr := os.Getenv("RATE_LIMITER_ENABLED")
+	ratelimiterEnableBool, err := strconv.ParseBool(ratelimiterEnableStr)
+	if err != nil {
+		fmt.Println("Invalid boolean value, defaulting to false")
+		ratelimiterEnableBool = false
+	}
+
 	// Retrieve and convert maxIdleConns
 	maxIdleConnsStr := os.Getenv("DB_MAX_IDLE_CONNS")
 	maxIdleConns, err := strconv.Atoi(maxIdleConnsStr)
@@ -82,6 +99,11 @@ func main() {
 				iss:    "Khelmandu",
 			},
 		},
+		rateLimiter: ratelimiter.Config{
+			RequestsPerTimeFrame: ratelimiterRequestsInt,
+			TimeFrame:            time.Second * 5,
+			Enabled:              ratelimiterEnableBool,
+		},
 	}
 	// Logger
 	logger := zap.Must(zap.NewProduction()).Sugar()
@@ -102,6 +124,13 @@ func main() {
 	logger.Info("database connection pool established")
 
 	store := store.NewStorage(db)
+
+	// Rate limiter
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.rateLimiter.RequestsPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
+
 	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 
 	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
@@ -112,6 +141,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		rateLimiter:   rateLimiter,
 	}
 
 	//Metrics collected
