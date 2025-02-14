@@ -9,6 +9,11 @@ import (
 
 var Validate *validator.Validate
 
+// init is special function in Go. it is used for package initialization and has some unique properties.  it is executed before main(), without explicitly called.
+// each package can have multiple init() func, but they run only once when the package is imported.
+// init() func in imported package run before the init() of the main package
+// init() cannot take parameters or return values
+
 func init() {
 	Validate = validator.New(validator.WithRequiredStructEnabled())
 }

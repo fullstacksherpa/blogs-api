@@ -5,8 +5,10 @@ import (
 	"blogsapi/internal/db"
 	"blogsapi/internal/mailer"
 	"blogsapi/internal/store"
+	"expvar"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -111,6 +113,15 @@ func main() {
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
 	}
+
+	//Metrics collected
+	expvar.NewString("version").Set(version)
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
 
 	mux := app.mount()
 

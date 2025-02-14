@@ -10,7 +10,10 @@ require (
 	github.com/swaggo/http-swagger/v2 v2.0.2
 )
 
-require github.com/sendgrid/rest v2.6.9+incompatible // indirect
+require (
+	github.com/go-chi/cors v1.2.1 // indirect
+	github.com/sendgrid/rest v2.6.9+incompatible // indirect
+)
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect

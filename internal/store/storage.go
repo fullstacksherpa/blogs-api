@@ -13,6 +13,7 @@ var (
 	QueryTimeoutDuration = time.Second * 5
 )
 
+// it acts as data access layer, ensuring that the business logic does not directly interact with the database. The application.storage field hold an instance of this storage struct created with NewStorage function below , making it available throughout the application so that all handlers and services can access the storage layer.
 type Storage struct {
 	Posts interface {
 		GetByID(context.Context, int64) (*Post, error)
