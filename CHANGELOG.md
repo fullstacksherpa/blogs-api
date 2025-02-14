@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/fullstacksherpa/blogs-api/compare/v1.1.0...v1.2.0) (2025-02-14)
+
+
+### Features
+
+* added rate limitter ([9737a26](https://github.com/fullstacksherpa/blogs-api/commit/9737a26208f302948c4f889262908adef9a635ad))
+
 ## [1.1.0](https://github.com/fullstacksherpa/blogs-api/compare/v1.0.0...v1.1.0) (2025-02-14)
 
 
