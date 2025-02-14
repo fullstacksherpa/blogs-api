@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/fullstacksherpa/blogs-api/compare/v1.0.0...v1.1.0) (2025-02-14)
+
+
+### Features
+
+* workflows to update api version automatically ([59214df](https://github.com/fullstacksherpa/blogs-api/commit/59214df51ca82019b90cf627419560b288b4b2c3))
+
 ## 1.0.0 (2025-02-14)
 
 
